@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 
 const CategoryPage = () => {
@@ -32,9 +32,10 @@ const CategoryPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {products.length > 0 ? (
             products.map((product) => (
-              <div
+              <Link
+                to={`/product/${product._id}`}
                 key={product._id}
-                className="border rounded-lg p-2 shadow-md bg-white hover:shadow-lg transition duration-300"
+                className="block border rounded-lg p-2 shadow-md bg-white hover:shadow-lg transition duration-300"
                 style={{ maxWidth: "250px", margin: "auto" }}
               >
                 <img
@@ -47,7 +48,7 @@ const CategoryPage = () => {
                 <p className="text-blue-500 font-semibold mt-1 text-sm">
                   ${product.price}
                 </p>
-              </div>
+              </Link>
             ))
           ) : (
             <p className="text-gray-500">No products available.</p>

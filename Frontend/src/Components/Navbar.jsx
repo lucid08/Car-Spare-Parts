@@ -1,6 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
 
 const Navbar = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const navigate = useNavigate(); // Hook for navigation
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleDropdownToggle = () => {
+    setDropdownOpen((prevState) => !prevState);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token'); // Remove token from localStorage
+    setIsLoggedIn(false); // Update state
+    navigate('/login'); // Redirect to login page
+  };
+
   return (
     <nav className="bg-white border-gray-200 dark:bg-gray-900">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
@@ -16,72 +47,58 @@ const Navbar = () => {
           </span>
         </a>
 
-        {/* Search bar */}
+        {/* Right Side */}
         <div className="flex md:order-2">
-          <button
-            type="button"
-            data-collapse-toggle="navbar-search"
-            aria-controls="navbar-search"
-            aria-expanded="false"
-            className="md:hidden text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 me-1"
-          >
-            <svg
-              className="w-5 h-5"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 20 20"
-            >
-              <path
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-              />
-            </svg>
-            <span className="sr-only">Search</span>
-          </button>
-          <div className="relative hidden md:block">
-            <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-              <svg
-                className="w-4 h-4 text-gray-500 dark:text-gray-400"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-                />
-              </svg>
-              <span className="sr-only">Search icon</span>
-            </div>
-            <input
-              type="text"
-              id="search-navbar"
-              className="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="Search..."
-            />
-          </div>
-          {/* Login & Signup Links */}
           <div className="flex space-x-4 md:ms-4">
-            <a
-              href="/login"
-              className="text-sm text-gray-900 dark:text-white hover:text-blue-700 dark:hover:text-blue-500 font-medium py-2 px-3"
-            >
-              Login
-            </a>
-            <a
-              href="/signup"
-              className="text-sm text-white bg-blue-700 hover:bg-blue-800 rounded-lg px-4 py-2 font-medium"
-            >
-              Signup
-            </a>
+            {isLoggedIn ? (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={handleDropdownToggle}
+                  className="text-sm text-white bg-blue-700 hover:bg-blue-800 rounded-lg px-4 py-2 font-medium"
+                >
+                  Profile
+                </button>
+
+                {/* Dropdown Menu */}
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg border border-gray-200 z-10">
+                    <Link
+                      to="/profile"
+                      className="block px-4 py-2 text-gray-900 hover:bg-gray-100"
+                    >
+                      User Profile
+                    </Link>
+                    <Link
+                      to="/dashboard"
+                      className="block px-4 py-2 text-gray-900 hover:bg-gray-100"
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left block px-4 py-2 text-red-600 hover:bg-gray-100"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <a
+                  href="/login"
+                  className="text-sm text-gray-900 dark:text-white hover:text-blue-700 dark:hover:text-blue-500 font-medium py-2 px-3"
+                >
+                  Login
+                </a>
+                <a
+                  href="/signup"
+                  className="text-sm text-white bg-blue-700 hover:bg-blue-800 rounded-lg px-4 py-2 font-medium"
+                >
+                  Signup
+                </a>
+              </>
+            )}
           </div>
         </div>
 

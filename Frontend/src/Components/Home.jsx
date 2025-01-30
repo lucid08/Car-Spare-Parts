@@ -28,16 +28,7 @@ const Home = () => {
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 p-4">
-      {/* Sidebar */}
-      <div className="lg:w-1/4">
-        <DashBoard />
-        <Link
-          to="/cart"
-          className="block mt-4 bg-blue-500 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-600 focus:ring-2 focus:ring-blue-300 transition"
-        >
-          View Cart
-        </Link>
-      </div>
+
 
       {/* Main Content */}
       <div className="lg:w-3/4">

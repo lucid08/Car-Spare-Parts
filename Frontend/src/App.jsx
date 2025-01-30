@@ -20,6 +20,7 @@ import UpdateProductPage from './Components/UpdateProductPage'
 import Home from './Components/Home'
 import DeleteProductPage from './Components/DeleteProductPage'
 import Cart from './Components/Cart'
+import Profile from './Components/Profile'
 
 const Layout = () => {
   return (
@@ -93,6 +94,10 @@ const appRouter = createBrowserRouter([
       {
         path: '/cart',
         element: <Cart />,
+      },
+      {
+        path: '/profile',
+        element: <Profile />,
       },
     ],
   },

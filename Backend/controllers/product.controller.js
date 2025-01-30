@@ -107,23 +107,14 @@ export const updateProduct = async (req, res) => {
 
   try {
     // Verify and decode the token
-    let decodedToken;
-    try {
-      decodedToken = jwt.verify(token, process.env.JWT_SECRET); // Ensure JWT_SECRET is set in your environment
-    } catch (error) {
-      return res.status(401).json({ message: "Invalid or expired token" });
-    }
-
-    const userId = decodedToken.id; // Assuming `userId` is stored in the token payload
-    console.log("User ID from token:", userId);
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decodedToken.id; // Assuming `userId` is in the token payload
 
     // Fetch the product by ID
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-
-    console.log("Product creator ID:", product.creator.toString());
 
     // Check if the user is the creator of the product
     if (product.creator.toString() !== userId) {
@@ -132,16 +123,36 @@ export const updateProduct = async (req, res) => {
         .json({ message: "Unauthorized to update this product" });
     }
 
-    // Update the product
+    // Handle image upload if a new file is provided
+    if (req.file) {
+      const filePath = req.file.path;
+
+      // Upload new image to Cloudinary
+      const uploadResult = await cloudinary.uploader.upload(filePath, {
+        folder: "product",
+      });
+
+      // Delete the old image from Cloudinary
+      const oldImagePublicId = product.image.split("/").slice(-2).join("/").split(".")[0];
+      await cloudinary.uploader.destroy(oldImagePublicId);
+
+      // Update the image URL in the request body
+      req.body.image = uploadResult.secure_url;
+    }
+
+    // Update the product fields
     const updatedProduct = await Product.findByIdAndUpdate(id, req.body, {
       new: true,
     });
 
     // Return the updated product
-    res.status(200).json(updatedProduct);
+    res.status(200).json({
+      message: "Product updated successfully",
+      product: updatedProduct,
+    });
   } catch (error) {
     console.error("Error updating product:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
 
@@ -255,6 +266,29 @@ export const getProductsByCategory = async (req, res) => {
       .json({ message: "Failed to fetch product", error: error.message });
   }
 };
-export const hii = async (req, res) => {
-  console.log("hiii");
+
+export const getProductsByUser = async (req, res) => {
+  try {
+    // Get the userId from the request (e.g., from req.user or query params)
+    const userId = req.user.id; // Assuming authentication middleware sets req.user
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required." });
+    }
+console.log(userId);
+
+    // Fetch products created by the user
+    const products = await Product.find({ creator: userId });
+
+    // Check if products exist
+    if (!products || products.length === 0) {
+      return res.status(404).json({ message: "No products found for this user." });
+    }
+
+    // Return the products
+    res.status(200).json({ products });
+  } catch (error) {
+    console.error("Error fetching products:", error.message);
+    res.status(500).json({ message: "Server error. Unable to fetch products." });
+  }
 };

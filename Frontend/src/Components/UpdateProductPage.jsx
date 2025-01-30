@@ -4,18 +4,18 @@ import { useParams, useNavigate } from "react-router-dom";
 
 const UpdateProductPage = () => {
   const { productId } = useParams();
-  console.log(productId);
-  const navigate = useNavigate(); // For redirecting user if not authorized
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: "",
     price: "",
     description: "",
     stockQuantity: "",
     category: "",
-    image: "",
   });
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(""); // Error state
+  const [image, setImage] = useState(null); // For file upload
+  const [currentImage, setCurrentImage] = useState(""); // To display existing image
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -23,7 +23,7 @@ const UpdateProductPage = () => {
         const token = localStorage.getItem("token");
         if (!token) {
           alert("You need to be logged in.");
-          navigate("/login"); // Redirect to login if no token
+          navigate("/login");
           return;
         }
 
@@ -37,23 +37,20 @@ const UpdateProductPage = () => {
         );
 
         const product = response.data.product;
-        // console.log(product);
-        
 
         if (!product) {
           setError("Product not found.");
           return;
         }
 
-        // Ensure all fields are populated in the form
         setFormData({
           title: product.title || "",
           price: product.price || "",
           description: product.description || "",
           stockQuantity: product.stockQuantity || "",
           category: product.category || "",
-          image: product.image || "",
         });
+        setCurrentImage(product.image || ""); // Set the current image URL
       } catch (error) {
         console.error("Error fetching product details:", error);
         setError("Failed to fetch product details.");
@@ -70,6 +67,10 @@ const UpdateProductPage = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  const handleImageChange = (e) => {
+    setImage(e.target.files[0]); // Store the selected file
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -81,19 +82,29 @@ const UpdateProductPage = () => {
         return;
       }
 
+      const data = new FormData();
+      data.append("title", formData.title);
+      data.append("price", formData.price);
+      data.append("description", formData.description);
+      data.append("stockQuantity", formData.stockQuantity);
+      data.append("category", formData.category);
+
+      if (image) {
+        data.append("image", image);
+      }
+
       const response = await axios.put(
         `http://localhost:8000/api/v1/product/update-product/${productId}`,
-        formData,
+        data,
         {
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         }
       );
 
       alert("Product updated successfully!");
-      navigate(`/product/${productId}`); // Redirect to product details page
+      navigate(`/product/${productId}`);
     } catch (error) {
       console.error("Error updating product:", error);
       alert("Failed to update product.");
@@ -182,16 +193,21 @@ const UpdateProductPage = () => {
         </select>
       </div>
       <div>
-        <label htmlFor="image">Image URL</label>
+        <label htmlFor="image">Image</label>
         <input
-          type="text"
+          type="file"
           id="image"
           name="image"
-          value={formData.image}
-          onChange={handleChange}
-          required
+          accept="image/*"
+          onChange={handleImageChange}
           className="border p-2 w-full"
         />
+        {currentImage && (
+          <div className="mt-2">
+            <p>Current Image:</p>
+            <img src={currentImage} alt="Product" className="w-32 h-32" />
+          </div>
+        )}
       </div>
       <div className="flex justify-center items-center">
         <button

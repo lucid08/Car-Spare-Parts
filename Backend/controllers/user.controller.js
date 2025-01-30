@@ -212,3 +212,74 @@ export const resetPassword = async (req, res) => {
         res.status(500).json({ message: 'Something went wrong. Please try again later.' });
     }
 };
+
+// Controller to get user data by ID
+// export const getUserProfile = async (req, res) => {
+//   const userId = req.params.id;
+
+//   try {
+//     const user = await User.findById(userId);
+
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     res.status(200).json({
+//       name: user.fullName,
+//       email: user.email,
+//       profilePicture: user.profilePicture || "", // Add this field to schema if needed
+//       bio: user.bio || "No bio available",
+//       location: user.location || "Location not provided",
+//       joinedDate: user.createdAt.toDateString(),
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error });
+//   }
+// };
+export const getProfile = async (req, res) => {
+    try {
+      // Extract user ID from the token payload
+      const token = req.headers.authorization.split(" ")[1]; // 'Bearer <token>'
+      const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decodedToken.id;
+  
+      // Fetch the user data from the database
+      const user = await User.findById(userId).select("-password");
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      res.json(user);
+    } catch (error) {
+      console.error(error);
+      res.status(401).json({ message: "Unauthorized" });
+    }
+  };
+
+// Controller to update user profile
+export const updateUserProfile = async (req, res) => {
+  const userId = req.params.id;
+  const { name, email, bio, location, profilePicture } = req.body;
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        fullName: name,
+        email,
+        bio,
+        location,
+        profilePicture,
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ message: "Profile updated successfully", updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
